@@ -1,0 +1,25 @@
+# Binaries and compiled files
+bin/
+*.exe
+
+# Frontend dependencies and build artifacts
+node_modules/
+coordinator/web/dist/
+
+# Shared Data (simulated HDFS)
+shared-hdfs/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor and IDE configurations
+.vscode/
+.idea/
+
+# Environment files
+.env
