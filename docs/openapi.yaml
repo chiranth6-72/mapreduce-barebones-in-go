@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: Distributed MapReduce Engine Coordinator API
+  description: |
+    This specification outlines the REST/JSON API endpoints exposed by the central MapReduce Coordinator node on port `8080`.
+    These endpoints are consumed by the Single Page Application (SPA) dashboard to visualize the cluster state, launch jobs, explore files, and execute chaos simulations.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local MapReduce Coordinator Web Server
+paths:
+  /api/state:
+    get:
+      summary: Retrieve Cluster State
+      description: Returns the active configuration, registered workers, running job pipelines, task statuses, and a complete listing of files in the virtual HDFS.
+      responses:
+        '200':
+          description: Successful retrieval of the entire cluster hierarchy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+                  map_tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  reduce_tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  workers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Worker'
+                  storage:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FileEntry'
+
+  /api/submit:
+    post:
+      summary: Launch MapReduce Execution Pipeline
+      description: Submits a new computational job (Word Count or Inverted Index) to the cluster.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - job_type
+              properties:
+                job_type:
+                  type: string
+                  enum: [wordcount, invertedindex]
+                  description: The MapReduce algorithm to execute.
+                num_map_tasks:
+                  type: integer
+                  default: 4
+                  description: Desired number of Map tasks (input splits).
+                num_reduce_tasks:
+                  type: integer
+                  default: 2
+                  description: Desired number of Reduce tasks (output partitions).
+                input_path:
+                  type: string
+                  description: Staging directory for source files. Defaults to internal input directory.
+                output_path:
+                  type: string
+                  description: Staging directory for outputs. Defaults to internal output directory.
+      responses:
+        '200':
+          description: Job successfully created and added to the processing queue.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Success:
+                    type: boolean
+                  JobID:
+                    type: string
+                  Error:
+                    type: string
+
+  /api/workers/kill:
+    post:
+      summary: Simulate Worker Crash (Chaos Engineering)
+      description: Forces a worker node's state to inactive, instantly causing the Coordinator to reschedule its pending or running tasks onto other healthy nodes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - worker_id
+              properties:
+                worker_id:
+                  type: string
+                  description: The unique ID of the worker to crash.
+      responses:
+        '200':
+          description: Worker marked as offline; self-healing routine successfully triggered.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/file/write:
+    post:
+      summary: Save Input Document to virtual HDFS
+      description: Uploads or saves a plain text file directly inside the `./shared-hdfs/input/` directory to allow computing against custom text datasets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+                - content
+              properties:
+                filename:
+                  type: string
+                  example: custom-notes.txt
+                  description: The output file name.
+                content:
+                  type: string
+                  example: This is a test file for the wordcount algorithm.
+                  description: Plain text file content.
+      responses:
+        '200':
+          description: File successfully written to the virtual DFS.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  path:
+                    type: string
+
+  /api/file/content:
+    get:
+      summary: Preview File Contents
+      description: Returns the raw text payload of a specific file stored inside `./shared-hdfs/`.
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Relative path of the target file (e.g. `input/doc-0.txt` or `output/final/part-0`).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Raw file content returned successfully as plain text.
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  schemas:
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+        input_path:
+          type: string
+        output_path:
+          type: string
+        mapper:
+          type: string
+        reducer:
+          type: string
+        num_map_tasks:
+          type: integer
+        num_reduce_tasks:
+          type: integer
+        state:
+          type: string
+          enum: [PENDING, MAPPING, SHUFFLING, REDUCING, COMPLETED, FAILED]
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+        task_type:
+          type: string
+          enum: [MAP, REDUCE]
+        task_index:
+          type: integer
+        state:
+          type: string
+          enum: [PENDING, ASSIGNED, RUNNING, COMPLETED, FAILED]
+        worker_id:
+          type: string
+        assigned_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        error:
+          type: string
+
+    Worker:
+      type: object
+      properties:
+        id:
+          type: string
+        address:
+          type: string
+        last_seen:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+        tasks_handled:
+          type: integer
+
+    FileEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+        is_dir:
+          type: boolean
