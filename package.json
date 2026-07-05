@@ -1,0 +1,16 @@
+{
+  "name": "mapreduce-dashboard",
+  "version": "1.0.0",
+  "description": "Distributed MapReduce Engine Dashboard",
+  "scripts": {
+    "build:html": "node -e \"const fs = require('fs'); fs.mkdirSync('coordinator/web/dist', { recursive: true }); fs.copyFileSync('coordinator/web/src/index.html', 'coordinator/web/dist/index.html')\"",
+    "build:css": "cleancss -o coordinator/web/dist/style.css coordinator/web/src/style.css",
+    "build:js": "javascript-obfuscator coordinator/web/src/app.js --output coordinator/web/dist/app.js --compact true --self-defending true --string-array true --string-array-encoding base64 --string-array-threshold 0.8",
+    "build": "npm run build:html && npm run build:css && npm run build:js"
+  },
+  "dependencies": {
+    "clean-css-cli": "^5.6.3",
+    "javascript-obfuscator": "^5.4.3",
+    "terser": "^5.48.0"
+  }
+}

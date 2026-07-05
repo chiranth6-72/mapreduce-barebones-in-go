@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed MapReduce Engine Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-xl font-black text-white shadow-md animate-pulse">
+                MR
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">MapReduce in Action</h1>
+                <p class="text-xs text-gray-400">Distributed Processing & Visualization Engine</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                <span class="w-2 h-2 mr-1.5 bg-green-400 rounded-full animate-ping"></span>
+                Coordinator Online
+            </span>
+            <div class="text-xs text-gray-400 font-mono" id="system-clock">00:00:00</div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col space-y-6">
+        
+        <!-- Tab Switching Header -->
+        <div class="border-b border-gray-700 flex justify-between items-center">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('cluster')" id="tab-btn-cluster" class="border-indigo-500 text-indigo-400 class-active-tab border-b-2 py-4 px-1 text-sm font-medium focus:outline-none transition-all duration-200">
+                    🌐 Cluster Topology
+                </button>
+                <button onclick="switchTab('pipeline')" id="tab-btn-pipeline" class="border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600 border-b-2 py-4 px-1 text-sm font-medium focus:outline-none transition-all duration-200">
+                    ⚡ Job Pipelines
+                </button>
+                <button onclick="switchTab('storage')" id="tab-btn-storage" class="border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600 border-b-2 py-4 px-1 text-sm font-medium focus:outline-none transition-all duration-200">
+                    📂 Distributed Storage (DFS)
+                </button>
+            </nav>
+            <div class="text-sm text-gray-400">
+                Refresh Rate: <span class="text-indigo-400 font-bold font-mono">1s</span>
+            </div>
+        </div>
+
+        <!-- TAB 1: CLUSTER TOPOLOGY -->
+        <section id="tab-cluster" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Cluster Stat Cards -->
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Total Active Workers</p>
+                        <h3 class="text-3xl font-extrabold text-white mt-1" id="stat-active-workers">0</h3>
+                    </div>
+                    <div class="p-3 bg-green-500/10 rounded-lg text-green-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                </div>
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Jobs Processed</p>
+                        <h3 class="text-3xl font-extrabold text-white mt-1" id="stat-total-jobs">0</h3>
+                    </div>
+                    <div class="p-3 bg-indigo-500/10 rounded-lg text-indigo-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    </div>
+                </div>
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Tasks Executed</p>
+                        <h3 class="text-3xl font-extrabold text-white mt-1" id="stat-total-tasks">0</h3>
+                    </div>
+                    <div class="p-3 bg-yellow-500/10 rounded-lg text-yellow-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Topology Map -->
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-bold mb-4 text-white">Cluster Visual Network Graph</h2>
+                <div class="bg-gray-950 rounded-lg border border-gray-800 p-8 flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden" id="topology-graph">
+                    <!-- Dynamic Topology Rendered Here -->
+                </div>
+            </div>
+
+            <!-- Worker Nodes Details List -->
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-bold mb-4 text-white">Registered Worker Nodes</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/50">
+                                <th class="px-6 py-3">Worker ID</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3">Health Metrics</th>
+                                <th class="px-6 py-3">Completed Tasks</th>
+                                <th class="px-6 py-3">Last Heartbeat</th>
+                                <th class="px-6 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="worker-list-table" class="divide-y divide-gray-700 bg-gray-800/20">
+                            <!-- Worker list injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: PIPELINES AND JOBS -->
+        <section id="tab-pipeline" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Job Submission Form -->
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-md h-fit">
+                    <h2 class="text-lg font-bold mb-4 text-white">Submit New MapReduce Job</h2>
+                    <form id="job-submission-form" onsubmit="submitNewJob(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Job Type / Algorithm</label>
+                            <select id="form-job-type" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="wordcount">📚 Word Count (Count frequencies of terms)</option>
+                                <option value="invertedindex">🔍 Inverted Index (Build searchable document index)</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Mappers (splits)</label>
+                                <input type="number" id="form-mappers" min="1" max="16" value="4" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Reducers (partitions)</label>
+                                <input type="number" id="form-reducers" min="1" max="16" value="2" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-700 pt-4 mt-2">
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-2.5 px-4 font-bold text-sm tracking-wide transition-all duration-200 shadow-md">
+                                Launch Execution Pipeline
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Active / Selected Job View -->
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-md lg:col-span-2 flex flex-col min-h-[350px]">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-white" id="selected-job-id">Select a Job below to track progress</h2>
+                            <p class="text-xs text-gray-400 mt-1" id="selected-job-meta">-</p>
+                        </div>
+                        <span id="selected-job-badge" class="px-2.5 py-1 rounded text-xs font-bold tracking-wider uppercase hidden"></span>
+                    </div>
+
+                    <!-- Pipeline Phase Tracker -->
+                    <div class="grid grid-cols-3 gap-2 py-4 mb-4 border-b border-t border-gray-700">
+                        <div class="text-center p-3 rounded-lg bg-gray-900/30" id="phase-card-map">
+                            <h4 class="text-xs text-gray-400 uppercase font-semibold">1. Map Phase</h4>
+                            <div class="mt-2 text-sm font-bold text-gray-200" id="phase-prog-map">0%</div>
+                        </div>
+                        <div class="text-center p-3 rounded-lg bg-gray-900/30" id="phase-card-shuffle">
+                            <h4 class="text-xs text-gray-400 uppercase font-semibold">2. Shuffle/Sort</h4>
+                            <div class="mt-2 text-sm font-bold text-gray-200" id="phase-prog-shuffle">0%</div>
+                        </div>
+                        <div class="text-center p-3 rounded-lg bg-gray-900/30" id="phase-card-reduce">
+                            <h4 class="text-xs text-gray-400 uppercase font-semibold">3. Reduce Phase</h4>
+                            <div class="mt-2 text-sm font-bold text-gray-200" id="phase-prog-reduce">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Task Grid Visualizer -->
+                    <div class="flex-1 space-y-4">
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Map Task Workers Assign Grid</h4>
+                            <div class="flex flex-wrap gap-2" id="grid-map-tasks">
+                                <!-- Map squares dynamically added -->
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Reduce Task Workers Assign Grid</h4>
+                            <div class="flex flex-wrap gap-2" id="grid-reduce-tasks">
+                                <!-- Reduce squares dynamically added -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jobs History List -->
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-bold mb-4 text-white">Job Pipeline Executions (History)</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/50">
+                                <th class="px-6 py-3">Job ID</th>
+                                <th class="px-6 py-3">Type</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3">Mappers / Reducers</th>
+                                <th class="px-6 py-3">Started</th>
+                                <th class="px-6 py-3">Ended</th>
+                                <th class="px-6 py-3 text-right">Inspect</th>
+                            </tr>
+                        </thead>
+                        <tbody id="job-history-table" class="divide-y divide-gray-700 bg-gray-800/20">
+                            <!-- Job records injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: DFS DISTRIBUTED FILE SYSTEM -->
+        <section id="tab-storage" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- DFS File Tree Browser -->
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-md flex flex-col h-[550px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-white">Simulated DFS Explorer</h2>
+                        <span class="text-xs text-gray-400 bg-gray-900 px-2 py-1 rounded">Volume: ./shared-hdfs</span>
+                    </div>
+
+                    <!-- Custom Dataset Creator -->
+                    <div class="mb-4 bg-gray-900/40 border border-gray-700/60 p-3 rounded-lg">
+                        <h3 class="text-xs font-bold uppercase text-gray-400 mb-2">Upload Custom Input Document</h3>
+                        <div class="space-y-2">
+                            <input type="text" id="dfs-filename" placeholder="custom-document.txt" class="w-full bg-gray-950 border border-gray-700 rounded px-2.5 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <textarea id="dfs-content" rows="3" placeholder="Insert text to run wordcount or indexes on..." class="w-full bg-gray-950 border border-gray-700 rounded px-2.5 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+                            <button onclick="writeCustomFile()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs py-1.5 font-bold transition duration-200">
+                                Save to hdfs/input/
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- File Tree -->
+                    <div class="flex-1 overflow-y-auto font-mono text-sm space-y-1.5 border border-gray-700 p-3 rounded-lg bg-gray-950" id="dfs-file-tree">
+                        <!-- Dynamic file explorer entries -->
+                    </div>
+                </div>
+
+                <!-- File Content Preview pane -->
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-md lg:col-span-2 flex flex-col h-[550px]">
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-white" id="dfs-preview-title">DFS File Contents Inspector</h2>
+                            <p class="text-xs text-gray-400 mt-0.5" id="dfs-preview-meta">-</p>
+                        </div>
+                        <span class="text-xs text-gray-400" id="dfs-preview-size">0 bytes</span>
+                    </div>
+                    <div class="flex-1 rounded-lg border border-gray-700 bg-gray-950 p-4 font-mono text-xs overflow-auto text-green-400/90 leading-relaxed whitespace-pre" id="dfs-preview-body">
+Select a file on the left side to preview its contents instantly.
+
+You will see raw client documents, intermediate map partitions (mr-M-R), and final aggregated partition outputs!
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Status -->
+    <footer class="bg-gray-800/50 border-t border-gray-800 px-6 py-3 mt-auto text-center text-xs text-gray-400">
+        MapReduce Distributed Core &copy; 2026. Made as a high-fidelity visualization project.
+    </footer>
+
+    <!-- Task Detail Modal -->
+    <div id="task-modal" class="fixed inset-0 bg-gray-950/70 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-bold text-white" id="modal-task-title">Task Details</h3>
+                <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white transition duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-3 text-sm" id="modal-task-body">
+                <!-- Injected task parameters -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <script src="app.js"></script>
+</body>
+</html>
