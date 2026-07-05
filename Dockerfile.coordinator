@@ -1,0 +1,29 @@
+# --- Stage 1: Build & Obfuscate Frontend ---
+FROM node:22-alpine AS web-builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY coordinator/web/src/ ./coordinator/web/src/
+RUN npm run build
+
+# --- Stage 2: Build Go Coordinator ---
+FROM golang:1.20-alpine AS go-builder
+WORKDIR /app
+COPY go.mod ./
+COPY shared/ ./shared/
+COPY coordinator/ ./coordinator/
+# Copy the minified and obfuscated assets from Stage 1
+COPY --from=web-builder /app/coordinator/web/dist/ ./coordinator/web/dist/
+# Compile Go binary to a distinct file path (avoid folder name collision)
+RUN cd coordinator && CGO_ENABLED=0 GOOS=linux go build -o /app/coordinator-bin .
+
+# --- Stage 3: Minimal Runtime Image ---
+FROM alpine:latest
+WORKDIR /app
+COPY --from=go-builder /app/coordinator-bin /app/coordinator-bin
+# Set storage path
+RUN mkdir -p /shared-hdfs
+# Expose RPC & Web port
+EXPOSE 1234 8080
+# Run coordinator binary
+CMD ["/app/coordinator-bin", "1234", "8080", "/shared-hdfs"]

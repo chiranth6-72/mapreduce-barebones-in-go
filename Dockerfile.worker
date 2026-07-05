@@ -1,0 +1,17 @@
+# --- Stage 1: Build Go Worker ---
+FROM golang:1.20-alpine AS go-builder
+WORKDIR /app
+COPY go.mod ./
+COPY shared/ ./shared/
+COPY worker/ ./worker/
+# Compile Go binary to a distinct file path (avoid folder name collision)
+RUN cd worker && CGO_ENABLED=0 GOOS=linux go build -o /app/worker-bin .
+
+# --- Stage 2: Minimal Runtime Image ---
+FROM alpine:latest
+WORKDIR /app
+COPY --from=go-builder /app/worker-bin /app/worker-bin
+RUN mkdir -p /shared-hdfs
+
+# Generate a unique worker ID at runtime and run worker binary
+CMD ["sh", "-c", "WORKER_ID=mr-worker-$(hostname)-$(date +%s) && /app/worker-bin $WORKER_ID mr-coordinator:1234 /shared-hdfs"]

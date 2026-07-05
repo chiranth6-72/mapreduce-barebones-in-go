@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mr-coordinator:
+    build:
+      context: .
+      dockerfile: Dockerfile.coordinator
+    container_name: mr-coordinator
+    hostname: mr-coordinator
+    ports:
+      - "1234:1234"
+      - "8080:8080"
+    volumes:
+      - ./shared-hdfs:/shared-hdfs:z
+    environment:
+      - NODE_ID=mr-coordinator
+    networks:
+      - mapreduce-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 100M
+
+  mr-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    volumes:
+      - ./shared-hdfs:/shared-hdfs:z
+    environment:
+      - NODE_ID=mr-worker
+    networks:
+      - mapreduce-net
+    depends_on:
+      - mr-coordinator
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 100M
+
+networks:
+  mapreduce-net:
+    driver: bridge
