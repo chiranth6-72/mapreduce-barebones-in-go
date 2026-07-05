@@ -1,5 +1,7 @@
 # 🌐 MapReduce in Action: A Distributed Engine with a Live Dashboard
 
+*Built with 💻 by Chiranth and his humble copilot, Pi.*
+
 Stop reading dry papers and start breaking things. This is a production-grade Distributed MapReduce framework built in Go, complete with a real-time, "glowing" visualization dashboard.
 
 ## 🚀 What is this?
