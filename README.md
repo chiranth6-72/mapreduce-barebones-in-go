@@ -41,6 +41,14 @@ It's a "Master-Worker" cluster that processes massive amounts of data in paralle
 ## 📖 The "Deep Dive" Docs
 
 We wrote these like we're talking to a fellow dev. Check them out:
+
+### 📘 Architectural Chapters
+Deep-dive technical walkthroughs of each component, with algorithm analysis, state diagrams, and trade-off notes:
+- 🧠 **[Chapter 1: Coordinator](./docs/chapters/ch1_coordinator.md)** — Job lifecycle, task scheduling, heartbeat monitoring, fault tolerance & RPC design.
+- 🔧 **[Chapter 2: Worker](./docs/chapters/ch2_worker.md)** — Map task execution, FNV-1a hash partitioning, intermediate TSV chunking, polling loop.
+- 🔀 **[Chapter 3: Shuffle & Reduce](./docs/chapters/ch3_shuffle_and_reduce.md)** — Implicit network partitioning, in-memory key grouping, reduce execution, output format.
+
+### 📋 Reference Docs
 - 🗺️ **[Architecture](./docs/ARCHITECTURE.md):** How the pieces fit together.
 - 🛡️ **[Fault Tolerance](./docs/FAULT_TOLERANCE.md):** Why it doesn't crash when nodes die.
 - 🐳 **[Containers](./docs/CONTAINER_GUIDE.md):** A beginner's guide to Podman/Docker.

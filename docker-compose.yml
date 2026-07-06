@@ -16,29 +16,70 @@ services:
       - NODE_ID=mr-coordinator
     networks:
       - mapreduce-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1234"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
           cpus: '0.3'
           memory: 100M
 
-  mr-worker:
+  mr-worker-1:
     build:
       context: .
       dockerfile: Dockerfile.worker
+    container_name: mr-worker-1
     volumes:
       - ./shared-hdfs:/shared-hdfs:z
     environment:
-      - NODE_ID=mr-worker
+      - NODE_ID=mr-worker-1
     networks:
       - mapreduce-net
     depends_on:
-      - mr-coordinator
+      mr-coordinator:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           cpus: '0.25'
           memory: 100M
+
+  mr-worker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: mr-worker-2
+    volumes:
+      - ./shared-hdfs:/shared-hdfs:z
+    environment:
+      - NODE_ID=mr-worker-2
+    networks:
+      - mapreduce-net
+    depends_on:
+      mr-coordinator:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 100M
+
+  mr-submit:
+    build:
+      context: .
+      dockerfile: Dockerfile.wordcount
+    container_name: mr-submit
+    volumes:
+      - ./shared-hdfs:/shared-hdfs:z
+    command: ["-coordinator", "mr-coordinator:1234", "-input", "/shared-hdfs/input", "-output", "/shared-hdfs/output", "-map", "4", "-reduce", "2"]
+    networks:
+      - mapreduce-net
+    depends_on:
+      mr-coordinator:
+        condition: service_healthy
 
 networks:
   mapreduce-net:

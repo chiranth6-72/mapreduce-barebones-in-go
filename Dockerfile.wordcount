@@ -1,0 +1,14 @@
+# --- Stage 1: Build Go WordCount Client ---
+FROM golang:1.20-alpine AS builder
+WORKDIR /app
+COPY go.mod ./
+COPY shared/ ./shared/
+COPY examples/wordcount/ ./examples/wordcount/
+RUN cd examples/wordcount && CGO_ENABLED=0 GOOS=linux go build -o /app/wordcount-bin .
+
+# --- Stage 2: Minimal Runtime Image ---
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/wordcount-bin /app/wordcount-bin
+RUN mkdir -p /shared-hdfs
+ENTRYPOINT ["/app/wordcount-bin"]
